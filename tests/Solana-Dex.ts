@@ -13,10 +13,8 @@ describe("Solana-Dex", () => {
   anchor.setProvider(provider);
   const program = anchor.workspace.SolanaDex as Program<SolanaDex>;
 
-  // const signer = (provider.wallet as NodeWallet).payer;
-  // console.log("Signer :: ", signer.publicKey.toString());
-
   const owner = provider.wallet.publicKey;
+  const signer = provider.wallet;
   const mintAuthority = anchor.web3.Keypair.generate();
 
   const tokenSwapStateAccount = anchor.web3.Keypair.generate();
