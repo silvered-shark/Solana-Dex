@@ -21,8 +21,8 @@ describe("Solana-Dex", () => {
 
   let x_mint;
   let y_mint;
-  let token_x_ata;
-  let token_y_ata;
+  let token_x_account;
+  let token_y_account;
 
   let pool_token_mint;
   let swapAuthority;
@@ -77,18 +77,18 @@ describe("Solana-Dex", () => {
       .rpc();
   });
 
-  it("Initialize swap pool Authority (PDA), and ATAs", async () => {
+  it("Initialize swap pool Authority (PDA), and Token Accounts", async () => {
     [swapAuthority, bump] = await anchor.web3.PublicKey.findProgramAddress(
       [tokenSwapStateAccount.publicKey.toBuffer()],
       TOKEN_SWAP_PROGRAM_ID
     );
     console.log("Swap Pool Authority :: " + swapAuthority.toString());
 
-    token_x_ata = anchor.web3.Keypair.generate();
-    console.log(`token_x_ata :: `, token_x_ata.publicKey.toString());
+    token_x_account = anchor.web3.Keypair.generate();
+    console.log(`token_x_account :: `, token_x_account.publicKey.toString());
 
-    token_y_ata = anchor.web3.Keypair.generate();
-    console.log(`token_y_ata :: `, token_y_ata.publicKey.toString());
+    token_y_account = anchor.web3.Keypair.generate();
+    console.log(`token_y_account :: `, token_y_account.publicKey.toString());
 
     const tx = await program.methods
       .initializeTokenAccounts()
@@ -97,13 +97,13 @@ describe("Solana-Dex", () => {
         tokenAuthority: swapAuthority,
         xMint: x_mint.publicKey,
         yMint: y_mint.publicKey,
-        tokenXAta: token_x_ata.publicKey,
-        tokenYAta: token_y_ata.publicKey,
+        tokenXAccount: token_x_account.publicKey,
+        tokenYAccount: token_y_account.publicKey,
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
         rent: SYSVAR_RENT_PUBKEY,
         systemProgram: anchor.web3.SystemProgram.programId,
       })
-      .signers([token_x_ata, token_y_ata])
+      .signers([token_x_account, token_y_account])
       .rpc();
   });
 
@@ -113,32 +113,36 @@ describe("Solana-Dex", () => {
       .accounts({
         mintAuthority: mintAuthority.publicKey,
         mintAccount: x_mint.publicKey,
-        tokenAccount: token_x_ata.publicKey,
+        tokenAccount: token_x_account.publicKey,
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
       })
       .signers([mintAuthority])
       .rpc();
-    const token_x_ata_info = await splToken.getAccount(
+    const token_x_account_info = await splToken.getAccount(
       provider.connection,
-      token_x_ata.publicKey
+      token_x_account.publicKey
     );
-    console.log("token_x_ata balance :: " + token_x_ata_info.amount.toString());
+    console.log(
+      "token_x_account balance :: " + token_x_account_info.amount.toString()
+    );
 
     const txn = await program.methods
       .mintTokens(new anchor.BN(200))
       .accounts({
         mintAuthority: mintAuthority.publicKey,
         mintAccount: y_mint.publicKey,
-        tokenAccount: token_y_ata.publicKey,
+        tokenAccount: token_y_account.publicKey,
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
       })
       .signers([mintAuthority])
       .rpc();
-    const token_y_ata_info = await splToken.getAccount(
+    const token_y_account_info = await splToken.getAccount(
       provider.connection,
-      token_y_ata.publicKey
+      token_y_account.publicKey
     );
-    console.log("token_y_ata balance :: " + token_y_ata_info.amount.toString());
+    console.log(
+      "token_y_account balance :: " + token_y_account_info.amount.toString()
+    );
   });
 
   it("Initialize Pool Token Mint, Pool Token Account and Pool Token Fee Account", async () => {
@@ -181,8 +185,8 @@ describe("Solana-Dex", () => {
         tokenProgram: splToken.TOKEN_PROGRAM_ID,
         swapPubkey: swapAuthority,
         authorityPubkey: mintAuthority.publicKey,
-        tokenXAta: token_x_ata.publicKey,
-        tokenYAta: token_y_ata.publicKey,
+        tokenXAccount: token_x_account.publicKey,
+        tokenYAccount: token_y_account.publicKey,
         poolTokenMint: pool_token_mint.publicKey,
         poolTokenFeeAccount: pool_token_fee.publicKey,
         poolTokenAccount: pool_token_account.publicKey,
